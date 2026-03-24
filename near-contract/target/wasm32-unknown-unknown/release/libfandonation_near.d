@@ -1,0 +1,1 @@
+C:\Users\HP\Desktop\intern\fandonation\ on\ NEAR\fandonation-on-aptos\near-contract\target\wasm32-unknown-unknown\release\libfandonation_near.rlib: C:\Users\HP\Desktop\intern\fandonation\ on\ NEAR\fandonation-on-aptos\near-contract\src\lib.rs

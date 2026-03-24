@@ -1,0 +1,48 @@
+
+> next-app@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.3
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.6s
+ ○ Compiling / ...
+(node:28500) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ Compiled / in 9.4s (2190 modules)
+ ⨯     at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at @aptos-labs/ts-sdk (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:110:18)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at eval (./src/components/NFTCard.tsx:20:90)
+    at (ssr)/./src/components/NFTCard.tsx (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:426:1)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at eval (./src/app/page.tsx:10:77)
+    at (ssr)/./src/app/page.tsx (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:349:1)
+    at Object.__webpack_require__ [as require] (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at JSON.parse (<anonymous>)
+digest: "2194109092"
+ GET / 500 in 10147ms
+ ✓ Compiled in 1147ms (1198 modules)
+ ⨯     at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at @aptos-labs/ts-sdk (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:110:18)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at eval (./src/components/NFTCard.tsx:20:90)
+    at (ssr)/./src/components/NFTCard.tsx (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:426:1)
+    at __webpack_require__ (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at eval (./src/app/page.tsx:10:77)
+    at (ssr)/./src/app/page.tsx (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\app\page.js:349:1)
+    at Object.__webpack_require__ [as require] (C:\Users\HP\Desktop\intern\fandonation on aptos\fandonation_on_Base\.next\server\webpack-runtime.js:33:43)
+    at JSON.parse (<anonymous>)
+digest: "2194109092"
+ GET / 500 in 76ms
+[?25h

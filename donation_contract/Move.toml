@@ -1,0 +1,16 @@
+[package]
+name = "donation_contract"
+version = "0.0.1"
+
+[addresses]
+donation_contract = "0xbe21f5e2b07a0a7767f94ee7196f83bbc1f0f393f2572b314d79cb99e8cc4c2e"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "testnet"
+subdir = "aptos-move/framework/aptos-framework"
+
+[dependencies.AptosTokenObjects]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "testnet"
+subdir = "aptos-move/framework/aptos-token-objects"
