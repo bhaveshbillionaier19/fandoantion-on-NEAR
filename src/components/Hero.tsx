@@ -59,14 +59,14 @@ export default function Hero() {
             href="#creators"
             className="gradient-btn text-white font-semibold px-8 py-3.5 rounded-full text-base inline-flex items-center gap-2 group"
           >
-            Explore creators
+            Explore NFTs
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
           <Link
             href="/dashboard"
             className="gradient-btn-outline text-foreground font-semibold px-8 py-3.5 rounded-full text-base hover:bg-white/5 transition-colors"
           >
-            Open dashboard
+            Open MintNFT
           </Link>
         </motion.div>
       </motion.div>

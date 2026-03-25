@@ -1,36 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { Home, LayoutDashboard, LogOut, Copy, Check, ExternalLink } from "lucide-react";
+import { Home, LayoutDashboard, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useWalletSelector } from "@near-wallet-selector/react-hook";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  explorerAccountUrl,
-  nearContractId,
   nearNetworkLabel,
-  shortenAccountId,
+  yoctoToNear,
 } from "@/lib/near";
 
 const navLinks = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "MintNFT" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [showWalletPopup, setShowWalletPopup] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<bigint | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  const { signedAccountId, signIn, signOut } = useWalletSelector();
+  const { signedAccountId, signIn, signOut, getBalance } = useWalletSelector();
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!signedAccountId) {
+      setWalletBalance(null);
+      return;
+    }
+
+    const accountId = signedAccountId;
+    let cancelled = false;
+
+    async function loadBalance() {
+      try {
+        const balance = await getBalance(accountId);
+        if (!cancelled) {
+          setWalletBalance(balance);
+        }
+      } catch {
+        if (!cancelled) {
+          setWalletBalance(null);
+        }
+      }
+    }
+
+    loadBalance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [getBalance, signedAccountId]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,12 +72,6 @@ export default function Navbar() {
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showWalletPopup]);
-
-  function copyAddress(address: string) {
-    navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   const connected = mounted && Boolean(signedAccountId);
 
@@ -109,12 +130,17 @@ export default function Navbar() {
           <div className="relative" ref={popupRef}>
             <button
               onClick={connected ? () => setShowWalletPopup(!showWalletPopup) : signIn}
-              className="gradient-btn text-white text-sm font-semibold px-5 py-2 rounded-full inline-flex items-center gap-2"
+              className="gradient-btn text-white text-sm font-semibold px-4 py-2 rounded-full inline-flex items-center gap-3"
             >
               {connected && signedAccountId ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-green-400" />
-                  {shortenAccountId(signedAccountId, 8, 6)}
+                  <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span className="max-w-[180px] truncate text-sm">{signedAccountId}</span>
+                    <span className="text-xs text-white/80">
+                      {walletBalance === null ? "Loading..." : `${yoctoToNear(walletBalance)} NEAR`}
+                    </span>
+                  </span>
                 </>
               ) : (
                 "Connect Wallet"
@@ -137,32 +163,14 @@ export default function Navbar() {
                   </div>
 
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Wallet Account</p>
-                    <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-3 py-2">
-                      <span className="text-sm font-mono text-foreground truncate flex-1">{signedAccountId}</span>
-                      <button
-                        onClick={() => copyAddress(signedAccountId)}
-                        className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                      >
-                        {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Wallet</p>
+                    <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                      <p className="text-sm font-mono text-foreground truncate">{signedAccountId}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {walletBalance === null ? "Loading balance..." : `${yoctoToNear(walletBalance)} NEAR`}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Contract</p>
-                    <div className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm font-mono break-all">{nearContractId}</div>
-                  </div>
-
-                  <a
-                    href={explorerAccountUrl(signedAccountId)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors mb-3"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    View on Explorer
-                  </a>
 
                   <button
                     onClick={async () => {

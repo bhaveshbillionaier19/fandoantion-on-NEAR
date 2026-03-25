@@ -11,7 +11,7 @@ export default function BottomNav() {
 
   const navLinks = [
     { href: "/", icon: Home, label: "Home" },
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/dashboard", icon: LayoutDashboard, label: "MintNFT" },
   ];
 
   return (

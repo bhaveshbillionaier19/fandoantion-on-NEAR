@@ -12,13 +12,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { uploadNftToIPFS } from "@/lib/ipfs";
 import {
   type CreatorView,
-  type DonationView,
   type NftView,
   mintStorageDeposit,
   nearContractId,
   nearGas,
   nearToYocto,
-  timestampLabel,
   yoctoToNear,
 } from "@/lib/near";
 
@@ -28,7 +26,6 @@ export default function DashboardPage() {
 
   const [walletBalance, setWalletBalance] = useState<bigint | null>(null);
   const [creator, setCreator] = useState<CreatorView | null>(null);
-  const [receivedDonations, setReceivedDonations] = useState<DonationView[]>([]);
   const [mintedNfts, setMintedNfts] = useState<NftView[]>([]);
   const [ownedNfts, setOwnedNfts] = useState<NftView[]>([]);
   const [title, setTitle] = useState("");
@@ -37,13 +34,11 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   useEffect(() => {
     if (!signedAccountId) {
       setWalletBalance(null);
       setCreator(null);
-      setReceivedDonations([]);
       setMintedNfts([]);
       setOwnedNfts([]);
       return;
@@ -55,18 +50,13 @@ export default function DashboardPage() {
     async function loadDashboard() {
       setIsLoading(true);
       try {
-        const [balance, creatorResponse, donationsResponse, creatorNftsResponse, ownerNftsResponse] =
+        const [balance, creatorResponse, creatorNftsResponse, ownerNftsResponse] =
           await Promise.all([
             getBalance(accountId),
             viewFunction({
               contractId: nearContractId,
               method: "get_creator",
               args: { creator_id: accountId },
-            }),
-            viewFunction({
-              contractId: nearContractId,
-              method: "get_donations",
-              args: { creator_id: accountId, from_index: 0, limit: 20 },
             }),
             viewFunction({
               contractId: nearContractId,
@@ -86,7 +76,6 @@ export default function DashboardPage() {
 
         setWalletBalance(balance);
         setCreator((creatorResponse as CreatorView | null) || null);
-        setReceivedDonations(((donationsResponse as DonationView[]) || []).slice().reverse());
         setMintedNfts(((creatorNftsResponse as NftView[]) || []).slice().reverse());
         setOwnedNfts(((ownerNftsResponse as NftView[]) || []).slice().reverse());
       } catch (error) {
@@ -136,17 +125,12 @@ export default function DashboardPage() {
 
     const accountId = signedAccountId;
 
-    const [creatorResponse, donationsResponse, creatorNftsResponse, ownerNftsResponse, balance] =
+    const [creatorResponse, creatorNftsResponse, ownerNftsResponse, balance] =
       await Promise.all([
         viewFunction({
           contractId: nearContractId,
           method: "get_creator",
           args: { creator_id: accountId },
-        }),
-        viewFunction({
-          contractId: nearContractId,
-          method: "get_donations",
-          args: { creator_id: accountId, from_index: 0, limit: 20 },
         }),
         viewFunction({
           contractId: nearContractId,
@@ -162,7 +146,6 @@ export default function DashboardPage() {
       ]);
 
     setCreator((creatorResponse as CreatorView | null) || null);
-    setReceivedDonations(((donationsResponse as DonationView[]) || []).slice().reverse());
     setMintedNfts(((creatorNftsResponse as NftView[]) || []).slice().reverse());
     setOwnedNfts(((ownerNftsResponse as NftView[]) || []).slice().reverse());
     setWalletBalance(balance);
@@ -223,47 +206,14 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleWithdraw() {
-    if (!signedAccountId) {
-      signIn();
-      return;
-    }
-
-    setIsWithdrawing(true);
-    try {
-      await callFunction({
-        contractId: nearContractId,
-        method: "withdraw",
-        args: {},
-        gas: nearGas,
-        deposit: "1",
-      });
-
-      toast({
-        title: "Withdraw transaction sent",
-        description: "Approve the 1 yoctoNEAR security check in your wallet.",
-      });
-
-      await refreshDashboard();
-    } catch (error) {
-      toast({
-        title: "Withdraw failed",
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive",
-      });
-    } finally {
-      setIsWithdrawing(false);
-    }
-  }
-
   if (!signedAccountId) {
     return (
       <main className="container mx-auto px-4 py-16">
         <div className="glass-card glow-border rounded-3xl max-w-2xl mx-auto p-10 text-center">
           <ImagePlus className="w-12 h-12 mx-auto text-cyan-400 mb-4" />
-          <h1 className="text-3xl font-bold mb-3">My dashboard</h1>
+          <h1 className="text-3xl font-bold mb-3">MintNFT</h1>
           <p className="text-muted-foreground mb-8">
-            Connect your NEAR wallet to mint NFTs with Pinata IPFS media, review donations, and withdraw creator funds.
+            Connect your NEAR wallet to mint NFTs with Pinata IPFS media and manage your creator collectibles.
           </p>
           <button
             onClick={signIn}
@@ -285,19 +235,14 @@ export default function DashboardPage() {
         transition={{ duration: 0.45 }}
         className="glass-card glow-border rounded-3xl p-8 mb-8"
       >
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="text-sm text-cyan-300 font-medium mb-2">Creator dashboard</p>
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">Manage {signedAccountId}</h1>
-            <p className="text-muted-foreground max-w-2xl">
-              Mint NFTs to {nearContractId}, upload media to Pinata IPFS, and track fan support from the same testnet account.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/[0.04] px-5 py-4 text-sm">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Suggested mint deposit</p>
-            <p className="font-bold">{mintStorageDeposit} NEAR</p>
-            <p className="text-xs text-muted-foreground mt-2">Unused storage deposit is automatically refunded by the contract.</p>
-          </div>
+        <div>
+          <p className="text-sm text-cyan-300 font-medium mb-2">MintNFT Balance</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            {walletBalance === null ? "0" : yoctoToNear(walletBalance)} NEAR
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Available balance in your connected testnet wallet.
+          </p>
         </div>
       </motion.section>
 
@@ -313,14 +258,14 @@ export default function DashboardPage() {
         <StatsCard icon={ArrowRight} label="Owned NFTs" value={String(ownedNfts.length)} numericValue={ownedNfts.length} />
         <StatsCard
           icon={Wallet}
-          label="Withdrawable"
-          value={yoctoToNear(creator?.withdrawable_balance || "0")}
+          label="Total Amount Donated"
+          value={yoctoToNear(creator?.total_donations || "0")}
           suffix="NEAR"
-          numericValue={Number(yoctoToNear(creator?.withdrawable_balance || "0") || 0)}
+          numericValue={Number(yoctoToNear(creator?.total_donations || "0") || 0)}
         />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] mb-8">
+      <section className="mb-8">
         <div className="glass-card glow-border rounded-3xl p-6">
           <div className="mb-6">
             <h2 className="text-xl font-bold">Mint a creator NFT</h2>
@@ -378,50 +323,7 @@ export default function DashboardPage() {
                   "Mint NFT"
                 )}
               </button>
-              <button
-                onClick={handleWithdraw}
-                disabled={isWithdrawing || !creator || creator.withdrawable_balance === "0"}
-                className="gradient-btn-outline text-foreground font-semibold px-5 py-3 rounded-xl disabled:opacity-60"
-              >
-                {isWithdrawing ? "Withdrawing..." : "Withdraw donations"}
-              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="glass-card glow-border rounded-3xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold">Recent donations</h2>
-              <p className="text-sm text-muted-foreground">Fans supporting your creator account on testnet.</p>
-            </div>
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-          </div>
-
-          <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
-            {receivedDonations.length > 0 ? (
-              receivedDonations.map((donation, index) => (
-                <div
-                  key={`${donation.donor_id}-${donation.timestamp_ms}-${index}`}
-                  className="rounded-2xl bg-white/[0.03] px-4 py-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold font-mono truncate">{donation.donor_id}</p>
-                      <p className="text-xs text-muted-foreground">{timestampLabel(donation.timestamp_ms)}</p>
-                    </div>
-                    <p className="text-sm font-bold gradient-text">{yoctoToNear(donation.amount)} NEAR</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl bg-white/[0.03] px-4 py-8 text-center">
-                <p className="text-sm font-semibold mb-2">No donations yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Mint an NFT and share your creator profile. Donation receipts will appear here.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </section>
@@ -472,7 +374,3 @@ export default function DashboardPage() {
     </main>
   );
 }
-
-
-
-

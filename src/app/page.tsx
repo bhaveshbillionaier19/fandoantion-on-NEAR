@@ -168,13 +168,13 @@ export default function Home() {
                 </div>
                 <div className="rounded-2xl bg-white/[0.03] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Active contract</p>
-                  <p className="text-sm font-mono break-all">{nearContractId}</p>
+                  <p className="text-sm font-mono break-all">fandonation.testnet</p>
                 </div>
                 <Link
                   href="/dashboard"
                   className="gradient-btn text-white font-semibold px-5 py-3 rounded-xl inline-flex items-center gap-2"
                 >
-                  Go to dashboard
+                  Go to MintNFT
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -182,7 +182,7 @@ export default function Home() {
               <div className="rounded-2xl bg-white/[0.03] px-4 py-6">
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect a named testnet account like <span className="font-mono text-foreground">konigsegg123.testnet</span>{" "}
-                  to mint NFTs, donate NEAR, and manage your creator dashboard.
+                  to mint NFTs, donate NEAR, and manage your MintNFT page.
                 </p>
                 <button
                   onClick={signIn}
@@ -216,7 +216,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="rounded-2xl bg-white/[0.03] px-4 py-10 text-center text-sm text-muted-foreground">
-                No NFTs minted yet. Open the dashboard and mint the first collectible.
+                No NFTs minted yet. Open MintNFT and mint the first collectible.
               </div>
             )}
           </div>
@@ -263,7 +263,7 @@ export default function Home() {
                   href="/dashboard"
                   className="gradient-btn text-white font-semibold px-6 py-2.5 rounded-full text-sm inline-flex items-center gap-2"
                 >
-                  Open dashboard
+                  Open MintNFT
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -274,4 +274,3 @@ export default function Home() {
     </main>
   );
 }
-
