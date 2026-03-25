@@ -86,15 +86,6 @@ export default function CreatorCard({ creator, currentAccountId }: CreatorCardPr
           </div>
         )}
 
-        <div className="flex gap-3 pt-1">
-          <Link
-            href={`/creator/${creator.creator_id}`}
-            className="flex-1 gradient-btn text-white font-semibold py-3 rounded-xl inline-flex items-center justify-center gap-2"
-          >
-            <Heart className="w-4 h-4" />
-            {isCurrentCreator ? "Open your profile" : "Open profile"}
-          </Link>
-        </div>
       </div>
     </motion.article>
   );

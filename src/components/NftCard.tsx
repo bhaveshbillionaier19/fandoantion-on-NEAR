@@ -1,22 +1,75 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import { useWalletSelector } from "@near-wallet-selector/react-hook";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import {
   type NftView,
   explorerAccountUrl,
   issuedAtLabel,
+  nearContractId,
+  nearGas,
+  nearToYocto,
   nftMediaUrl,
 } from "@/lib/near";
 
 interface NftCardProps {
   token: NftView;
   compact?: boolean;
+  showDonateControls?: boolean;
 }
 
-export default function NftCard({ token, compact = false }: NftCardProps) {
+export default function NftCard({ token, compact = false, showDonateControls = false }: NftCardProps) {
   const mediaUrl = nftMediaUrl(token);
+  const { signedAccountId, signIn, callFunction } = useWalletSelector();
+  const { toast } = useToast();
+  const [donationAmount, setDonationAmount] = useState("");
+  const [isDonating, setIsDonating] = useState(false);
+
+  async function handleDonate() {
+    if (!signedAccountId) {
+      signIn();
+      return;
+    }
+
+    if (!donationAmount.trim() || Number(donationAmount) <= 0) {
+      toast({
+        title: "Invalid donation amount",
+        description: "Enter a positive NEAR amount before donating.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDonating(true);
+    try {
+      await callFunction({
+        contractId: nearContractId,
+        method: "donate",
+        args: { creator_id: token.creator_id },
+        gas: nearGas,
+        deposit: nearToYocto(donationAmount),
+      });
+
+      toast({
+        title: "Donation transaction sent",
+        description: "Approve the NEAR wallet prompt to complete the donation.",
+      });
+      setDonationAmount("");
+    } catch (error) {
+      toast({
+        title: "Donation failed",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsDonating(false);
+    }
+  }
 
   return (
     <motion.article
@@ -56,6 +109,31 @@ export default function NftCard({ token, compact = false }: NftCardProps) {
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
+
+        {showDonateControls && (
+          <div className="space-y-3 pt-1">
+            <div className="relative">
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="1"
+                value={donationAmount}
+                onChange={(event) => setDonationAmount(event.target.value)}
+                className="pr-16 bg-white/5 border-white/10"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">NEAR</span>
+            </div>
+
+            <button
+              onClick={handleDonate}
+              disabled={isDonating || signedAccountId === token.creator_id}
+              className="w-full gradient-btn text-white font-semibold py-2.5 rounded-xl disabled:opacity-60"
+            >
+              {isDonating ? "Waiting for wallet" : signedAccountId === token.creator_id ? "This is your NFT" : "Donate"}
+            </button>
+          </div>
+        )}
       </div>
     </motion.article>
   );

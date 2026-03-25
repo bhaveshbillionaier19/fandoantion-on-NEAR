@@ -254,11 +254,6 @@ export default function CreatorProfilePage() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/[0.03] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Creator account</p>
-            <p className="text-sm font-mono break-all">{creatorId}</p>
-          </div>
-
           <div className="space-y-2">
             <label htmlFor="donation-amount" className="text-sm font-medium">Donation amount</label>
             <div className="relative">
