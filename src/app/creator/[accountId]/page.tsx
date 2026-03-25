@@ -36,7 +36,6 @@ export default function CreatorProfilePage() {
   const [donationAmount, setDonationAmount] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDonating, setIsDonating] = useState(false);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,39 +168,6 @@ export default function CreatorProfilePage() {
     }
   }
 
-  async function handleWithdraw() {
-    if (!signedAccountId) {
-      signIn();
-      return;
-    }
-
-    setIsWithdrawing(true);
-    try {
-      await callFunction({
-        contractId: nearContractId,
-        method: "withdraw",
-        args: {},
-        gas: nearGas,
-        deposit: "1",
-      });
-
-      toast({
-        title: "Withdraw transaction sent",
-        description: "Approve the wallet prompt to withdraw creator donations.",
-      });
-
-      await refreshProfile();
-    } catch (error) {
-      toast({
-        title: "Withdraw failed",
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive",
-      });
-    } finally {
-      setIsWithdrawing(false);
-    }
-  }
-
   if (isLoading) {
     return (
       <main className="container mx-auto px-4 py-16">
@@ -326,16 +292,6 @@ export default function CreatorProfilePage() {
               "Donate NEAR"
             )}
           </button>
-
-          {isOwner && (
-            <button
-              onClick={handleWithdraw}
-              disabled={isWithdrawing || creator.withdrawable_balance === "0"}
-              className="w-full gradient-btn-outline text-foreground font-semibold py-3 rounded-xl disabled:opacity-60"
-            >
-              {isWithdrawing ? "Withdrawing..." : "Withdraw creator balance"}
-            </button>
-          )}
 
           <div className="rounded-2xl bg-white/[0.03] px-4 py-4">
             <p className="text-sm font-semibold mb-3">Top donors</p>

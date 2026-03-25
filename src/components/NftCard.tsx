@@ -8,7 +8,6 @@ import {
   explorerAccountUrl,
   issuedAtLabel,
   nftMediaUrl,
-  shortenAccountId,
 } from "@/lib/near";
 
 interface NftCardProps {
@@ -45,20 +44,6 @@ export default function NftCard({ token, compact = false }: NftCardProps) {
         {token.description && (
           <p className="text-sm text-muted-foreground line-clamp-3">{token.description}</p>
         )}
-
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-xl bg-white/[0.04] px-3 py-2">
-            <p className="uppercase tracking-wider text-muted-foreground mb-1">Creator</p>
-            <Link href={`/creator/${token.creator_id}`} className="font-mono text-foreground hover:text-cyan-300">
-              {shortenAccountId(token.creator_id, 8, 6)}
-            </Link>
-          </div>
-          <div className="rounded-xl bg-white/[0.04] px-3 py-2">
-            <p className="uppercase tracking-wider text-muted-foreground mb-1">Owner</p>
-            <p className="font-mono text-foreground truncate">{shortenAccountId(token.owner_id, 8, 6)}</p>
-          </div>
-        </div>
-
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Minted {issuedAtLabel(token.issued_at)}</span>
           <a
