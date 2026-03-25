@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { ImagePlus, Layers, TrendingUp, Wallet, ArrowRight } from "lucide-react";
 import { useWalletSelector } from "@near-wallet-selector/react-hook";
 import Hero from "@/components/Hero";
@@ -14,15 +13,31 @@ import {
   type CreatorView,
   type NftView,
   nearContractId,
+  toNftView,
   yoctoToNear,
 } from "@/lib/near";
+
+function compareYoctoDesc(left: string, right: string) {
+  const leftAmount = BigInt(left || "0");
+  const rightAmount = BigInt(right || "0");
+
+  if (rightAmount > leftAmount) {
+    return 1;
+  }
+
+  if (rightAmount < leftAmount) {
+    return -1;
+  }
+
+  return 0;
+}
 
 export default function Home() {
   const { signedAccountId, signIn, viewFunction, getBalance } = useWalletSelector();
   const { toast } = useToast();
 
   const [creators, setCreators] = useState<CreatorView[]>([]);
-  const [featuredNfts, setFeaturedNfts] = useState<NftView[]>([]);
+  const [allNfts, setAllNfts] = useState<NftView[]>([]);
   const [walletBalance, setWalletBalance] = useState<bigint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -35,26 +50,30 @@ export default function Home() {
     }
 
     try {
-      const result = (await viewFunction({
-        contractId: nearContractId,
-        method: "list_creators",
-        args: {
-          from_index: 0,
-          limit: 50,
-        },
-      })) as CreatorView[];
+      const [creatorsResponse, nftResponse] = await Promise.all([
+        viewFunction({
+          contractId: nearContractId,
+          method: "list_creators",
+          args: {
+            from_index: 0,
+            limit: 50,
+          },
+        }),
+        viewFunction({
+          contractId: nearContractId,
+          method: "nft_tokens",
+          args: {
+            from_index: "0",
+            limit: 100,
+          },
+        }),
+      ]);
 
-      const nextCreators = result || [];
-      setCreators(nextCreators);
-      setFeaturedNfts(
-        nextCreators
-          .flatMap((creator) => creator.recent_nfts)
-          .sort((left, right) => Number(right.issued_at || 0) - Number(left.issued_at || 0))
-          .slice(0, 6)
-      );
+      setCreators((creatorsResponse as CreatorView[]) || []);
+      setAllNfts((((nftResponse as any[]) || []).map(toNftView)).slice().reverse());
     } catch (error) {
       toast({
-        title: "Failed to load creators",
+        title: "Failed to load home data",
         description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
@@ -103,19 +122,12 @@ export default function Home() {
     [creators]
   );
 
-  const totalMinted = useMemo(
-    () => creators.reduce((sum, creator) => sum + creator.nft_count, 0),
-    [creators]
-  );
-
   const topCreator = useMemo(() => {
     if (creators.length === 0) {
-      return "No creators yet";
+      return null;
     }
 
-    return [...creators]
-      .sort((left, right) => Number(BigInt(right.total_donations) - BigInt(left.total_donations)))
-      .at(0)?.creator_id;
+    return [...creators].sort((left, right) => compareYoctoDesc(left.total_donations, right.total_donations))[0]?.creator_id || null;
   }, [creators]);
 
   return (
@@ -125,12 +137,7 @@ export default function Home() {
       <section className="container mx-auto px-4 -mt-8 mb-12">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard icon={Layers} label="Creators" value={String(creators.length)} numericValue={creators.length} />
-          <StatsCard
-            icon={ImagePlus}
-            label="Minted NFTs"
-            value={String(totalMinted)}
-            numericValue={totalMinted}
-          />
+          <StatsCard icon={ImagePlus} label="Minted NFTs" value={String(allNfts.length)} numericValue={allNfts.length} />
           <StatsCard
             icon={TrendingUp}
             label="Donations"
@@ -168,13 +175,13 @@ export default function Home() {
                 </div>
                 <div className="rounded-2xl bg-white/[0.03] px-4 py-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Active contract</p>
-                  <p className="text-sm font-mono break-all">fandonation.testnet</p>
+                  <p className="text-sm font-mono break-all">{nearContractId}</p>
                 </div>
                 <Link
                   href="/dashboard"
                   className="gradient-btn text-white font-semibold px-5 py-3 rounded-xl inline-flex items-center gap-2"
                 >
-                  Go to MintNFT
+                  Go to dashboard
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -182,7 +189,7 @@ export default function Home() {
               <div className="rounded-2xl bg-white/[0.03] px-4 py-6">
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect a named testnet account like <span className="font-mono text-foreground">konigsegg123.testnet</span>{" "}
-                  to mint NFTs, donate NEAR, and manage your MintNFT page.
+                  to mint NFTs, donate NEAR, and manage your creator dashboard.
                 </p>
                 <button
                   onClick={signIn}
@@ -198,25 +205,25 @@ export default function Home() {
           <div className="glass-card glow-border rounded-3xl p-6">
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
-                <h2 className="text-lg font-bold">Featured mints</h2>
-                <p className="text-xs text-muted-foreground">Recent NFTs minted by creators on {nearContractId}</p>
+                <h2 className="text-lg font-bold">All minted NFTs</h2>
+                <p className="text-xs text-muted-foreground">Contract-wide NFT gallery from {nearContractId}</p>
               </div>
-              {topCreator && topCreator !== "No creators yet" && (
+              {topCreator && (
                 <Link href={`/creator/${topCreator}`} className="text-xs text-muted-foreground hover:text-foreground">
                   Top supported creator
                 </Link>
               )}
             </div>
 
-            {featuredNfts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {featuredNfts.map((token) => (
+            {allNfts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[760px] overflow-y-auto pr-1">
+                {allNfts.map((token) => (
                   <NftCard key={token.token_id} token={token} compact />
                 ))}
               </div>
             ) : (
               <div className="rounded-2xl bg-white/[0.03] px-4 py-10 text-center text-sm text-muted-foreground">
-                No NFTs minted yet. Open MintNFT and mint the first collectible.
+                No NFTs minted yet. Open the dashboard and mint the first collectible.
               </div>
             )}
           </div>
@@ -263,7 +270,7 @@ export default function Home() {
                   href="/dashboard"
                   className="gradient-btn text-white font-semibold px-6 py-2.5 rounded-full text-sm inline-flex items-center gap-2"
                 >
-                  Open MintNFT
+                  Open dashboard
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
