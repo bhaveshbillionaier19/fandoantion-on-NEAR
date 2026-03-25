@@ -199,7 +199,7 @@ export default function Home() {
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
                 <h2 className="text-lg font-bold">Featured mints</h2>
-                <p className="text-xs text-muted-foreground">Recent NFTs with direct donation support on {nearContractId}</p>
+                <p className="text-xs text-muted-foreground">Recent NFTs minted by creators on {nearContractId}</p>
               </div>
               {topCreator && topCreator !== "No creators yet" && (
                 <Link href={`/creator/${topCreator}`} className="text-xs text-muted-foreground hover:text-foreground">
@@ -211,7 +211,7 @@ export default function Home() {
             {featuredNfts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {featuredNfts.map((token) => (
-                  <NftCard key={token.token_id} token={token} compact showDonateControls />
+                  <NftCard key={token.token_id} token={token} compact />
                 ))}
               </div>
             ) : (

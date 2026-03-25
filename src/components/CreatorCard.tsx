@@ -45,13 +45,6 @@ export default function CreatorCard({ creator, currentAccountId }: CreatorCardPr
             <Layers className="w-4 h-4 text-cyan-300" />
             <p className="text-sm font-semibold">Latest minted NFTs</p>
           </div>
-          <Link
-            href={`/creator/${creator.creator_id}`}
-            className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-          >
-            View profile
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
         </div>
 
         {creator.recent_nfts.length > 0 ? (
@@ -86,6 +79,19 @@ export default function CreatorCard({ creator, currentAccountId }: CreatorCardPr
           </div>
         )}
 
+        <div className="pt-1">
+          <Link
+            href={`/creator/${creator.creator_id}`}
+            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 font-semibold transition-opacity ${
+              isCurrentCreator
+                ? "gradient-btn-outline text-foreground opacity-60 pointer-events-none"
+                : "gradient-btn text-white"
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            {isCurrentCreator ? "This is your creator account" : "Donate"}
+          </Link>
+        </div>
       </div>
     </motion.article>
   );
