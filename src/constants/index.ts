@@ -5,7 +5,7 @@ export const nearNetworkId =
 export const nearNetworkLabel =
   nearNetworkId === "mainnet" ? "NEAR Mainnet" : "NEAR Testnet";
 export const nearContractId =
-  process.env.NEXT_PUBLIC_NEAR_CONTRACT_ID || "toyota123.testnet";
+  process.env.NEXT_PUBLIC_NEAR_CONTRACT_ID || "konigsegg123.testnet";
 export const nearExplorerBaseUrl =
   process.env.NEXT_PUBLIC_NEAR_EXPLORER_BASE_URL ||
   (nearNetworkId === "mainnet"

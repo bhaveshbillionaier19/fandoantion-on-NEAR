@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Home, PlusCircle, LogOut, Copy, Check, ExternalLink } from "lucide-react";
+import { Home, LayoutDashboard, LogOut, Copy, Check, ExternalLink } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
@@ -16,7 +16,7 @@ import {
 
 const navLinks = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/creator", icon: PlusCircle, label: "Creator" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
 ];
 
 export default function Navbar() {
@@ -68,38 +68,35 @@ export default function Navbar() {
               FD
             </span>
             <span className="flex flex-col">
-              <span className="text-sm font-bold leading-tight gradient-text">
-                Fan Donation
-              </span>
-              <span className="text-[10px] text-muted-foreground leading-tight">
-                Support creators on NEAR
-              </span>
+              <span className="text-sm font-bold leading-tight gradient-text">Fan Donation</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">NFT creators on NEAR</span>
             </span>
           </Link>
 
           <div className="flex items-center gap-1">
-            {navLinks.map(({ href, icon: Icon, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 hover:text-foreground ${
-                  pathname === href
-                    ? "text-foreground bg-white/[0.08]"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
-                {pathname === href && (
-                  <motion.div
-                    layoutId="navbar-active"
-                    className="absolute inset-0 rounded-full bg-white/[0.06] border border-white/[0.08]"
-                    style={{ zIndex: -1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            ))}
+            {navLinks.map(({ href, icon: Icon, label }) => {
+              const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 hover:text-foreground ${
+                    isActive ? "text-foreground bg-white/[0.08]" : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-active"
+                      className="absolute inset-0 rounded-full bg-white/[0.06] border border-white/[0.08]"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -136,39 +133,25 @@ export default function Navbar() {
                   <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/[0.08]">
                     <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
                     <span className="text-xs font-medium text-green-400">Connected</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {nearNetworkLabel}
-                    </span>
+                    <span className="ml-auto text-xs text-muted-foreground">{nearNetworkLabel}</span>
                   </div>
 
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                      Wallet Account
-                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Wallet Account</p>
                     <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-3 py-2">
-                      <span className="text-sm font-mono text-foreground truncate flex-1">
-                        {signedAccountId}
-                      </span>
+                      <span className="text-sm font-mono text-foreground truncate flex-1">{signedAccountId}</span>
                       <button
                         onClick={() => copyAddress(signedAccountId)}
                         className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                       >
-                        {copied ? (
-                          <Check className="w-3.5 h-3.5 text-green-400" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
+                        {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
 
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                      Contract
-                    </p>
-                    <div className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm font-mono break-all">
-                      {nearContractId}
-                    </div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Contract</p>
+                    <div className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm font-mono break-all">{nearContractId}</div>
                   </div>
 
                   <a

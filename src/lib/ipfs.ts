@@ -1,7 +1,8 @@
-interface Metadata {
-  name: string;
-  description: string;
-  image: string;
+export interface NftUploadResult {
+  mediaUri: string;
+  mediaGatewayUrl: string;
+  metadataUri: string;
+  metadataGatewayUrl: string;
 }
 
 export function normalizeIpfsUrl(url?: string | null): string | null {
@@ -15,73 +16,68 @@ export function normalizeIpfsUrl(url?: string | null): string | null {
   return url;
 }
 
-export async function uploadToIPFS(file: File, name: string, description: string): Promise<string> {
+export async function uploadNftToIPFS(
+  file: File,
+  name: string,
+  description: string
+): Promise<NftUploadResult> {
   const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
 
   if (!jwt) {
-    console.error("Missing NEXT_PUBLIC_PINATA_JWT env var");
     throw new Error("Pinata JWT is not configured");
   }
 
-  try {
-    // 1. Upload the image file using FormData
-    const formData = new FormData();
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("pinataMetadata", JSON.stringify({ name: file.name }));
+  formData.append("pinataOptions", JSON.stringify({ cidVersion: 1 }));
 
-    const pinataMetadata = JSON.stringify({ name: file.name });
-    formData.append("pinataMetadata", pinataMetadata);
+  const fileRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
+    body: formData,
+  });
 
-    const pinataOptions = JSON.stringify({ cidVersion: 1 });
-    formData.append("pinataOptions", pinataOptions);
-
-    const fileRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: formData,
-    });
-
-    if (!fileRes.ok) {
-      const errorText = await fileRes.text();
-      console.error("Pinata file upload failed", fileRes.status, errorText);
-      throw new Error("Failed to upload file to IPFS");
-    }
-
-    const fileJson = await fileRes.json();
-    const imageUrl = `https://gateway.pinata.cloud/ipfs/${fileJson.IpfsHash}`;
-
-    // 2. Upload the metadata JSON
-    const metadata: Metadata = {
-      name,
-      description,
-      image: imageUrl,
-    };
-
-    const jsonRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: JSON.stringify({
-        pinataContent: metadata,
-        pinataMetadata: { name: `${name}-metadata` },
-      }),
-    });
-
-    if (!jsonRes.ok) {
-      const errorText = await jsonRes.text();
-      console.error("Pinata metadata upload failed", jsonRes.status, errorText);
-      throw new Error("Failed to upload metadata to IPFS");
-    }
-
-    const jsonData = await jsonRes.json();
-    const jsonUrl = `https://gateway.pinata.cloud/ipfs/${jsonData.IpfsHash}`;
-
-    return jsonUrl;
-  } catch (error) {
-    console.error("Error uploading to IPFS:", error);
-    throw new Error("Failed to upload to IPFS");
+  if (!fileRes.ok) {
+    throw new Error(await fileRes.text());
   }
+
+  const fileJson = await fileRes.json();
+  const mediaUri = `ipfs://${fileJson.IpfsHash}`;
+  const mediaGatewayUrl = normalizeIpfsUrl(mediaUri) || mediaUri;
+
+  const metadata = {
+    name,
+    description,
+    image: mediaUri,
+  };
+
+  const metadataRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwt}`,
+    },
+    body: JSON.stringify({
+      pinataContent: metadata,
+      pinataMetadata: { name: `${name}-metadata` },
+    }),
+  });
+
+  if (!metadataRes.ok) {
+    throw new Error(await metadataRes.text());
+  }
+
+  const metadataJson = await metadataRes.json();
+  const metadataUri = `ipfs://${metadataJson.IpfsHash}`;
+  const metadataGatewayUrl = normalizeIpfsUrl(metadataUri) || metadataUri;
+
+  return {
+    mediaUri,
+    mediaGatewayUrl,
+    metadataUri,
+    metadataGatewayUrl,
+  };
 }

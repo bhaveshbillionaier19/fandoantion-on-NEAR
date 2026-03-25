@@ -1,88 +1,99 @@
 # Fan Donation on NEAR Testnet
 
-This repo is now structured as a NEAR testnet migration of the fan donation app:
+A modular NEAR Protocol testnet app where creators mint NFTs and fans donate native NEAR to support them.
 
-- `near-contract/`: Rust smart contract using `near-sdk`
-- `src/`: Next.js frontend using MyNearWallet via Wallet Selector
-- Default contract account: `toyota123.testnet`
-- Local CLI version used during migration: `near-cli-rs 0.24.0`
+Default testnet account in this repo:
+- wallet / deploy account: `konigsegg123.testnet`
+- faucet funding observed: `10 NEAR` on testnet
 
-## What Changed From Aptos
+## Stack
 
-- Move modules were replaced with a Rust contract for NEAR.
-- Hex addresses were replaced with named NEAR accounts like `creator.testnet`.
-- Petra / Aptos wallet flows were replaced with MyNearWallet on NEAR testnet.
-- NFT-centric creator objects were replaced with creator profiles plus native NEAR donation receipts.
-- Native NEAR uses yoctoNEAR under the hood, so the frontend converts between human-readable NEAR and on-chain amounts.
+- `near-contract/`: Rust smart contract with `near-sdk` and `near-contract-standards`
+- `src/`: Next.js frontend
+- Wallet: `@near-wallet-selector/react-hook` + `@near-wallet-selector/my-near-wallet`
+- Interaction: `near-api-js`
+- Media / metadata storage: Pinata IPFS
+
+## Folder Structure
+
+```text
+near-contract/
+  Cargo.toml
+  src/lib.rs
+src/
+  app/
+    page.tsx
+    dashboard/page.tsx
+    creator/[accountId]/page.tsx
+  components/
+    CreatorCard.tsx
+    NftCard.tsx
+    Navbar.tsx
+  lib/
+    near.ts
+    ipfs.ts
+```
 
 ## Smart Contract
 
-Full contract code lives in:
-
+Main contract file:
 - `near-contract/src/lib.rs`
 
-Implemented methods:
+Implemented features:
+- NEP-171 NFT minting through `mint_nft`
+- Creator donation tracking through `donate`
+- Donation history, totals, and withdrawable balances
+- Creator inventory indexing
+- Owner inventory lookup
+- Donation event logs and NFT mint event logs
+- Withdrawal callback recovery if transfer fails
 
-- `set_profile(display_name, bio, image_url)`
-- `donate(creator_id, message)`
-- `get_donations(creator_id)`
-- `get_donations_paginated(creator_id, from_index, limit)`
+Key methods:
+- `mint_nft(title, description, media, reference)`
+- `donate(creator_id)`
+- `get_nfts_by_creator(creator_id, from_index, limit)`
+- `get_nfts_by_owner(owner_id, from_index, limit)`
+- `get_donations(creator_id, from_index, limit)`
 - `get_total_donations(creator_id)`
 - `get_withdrawable_balance(creator_id)`
 - `get_creator(creator_id)`
+- `get_top_donors(creator_id, limit)`
 - `list_creators(from_index, limit)`
 - `withdraw()`
 
-Storage model:
+## Frontend Pages
 
-- `creator_id => profile + donation vector + total donations + withdrawable balance`
-- each donation stores `donor_id`, `amount`, `timestamp_ms`, and an optional message
-
-## Frontend Integration
-
-Important files:
-
-- `src/lib/near.ts`
-- `src/app/providers.tsx`
-- `src/app/page.tsx`
-- `src/app/creator/page.tsx`
-- `src/components/CreatorCard.tsx`
-
-Wallet integration:
-
-- `@near-wallet-selector/react-hook`
-- `@near-wallet-selector/my-near-wallet`
-- `near-api-js` for NEAR amount conversion helpers
-
-Core flow:
-
-1. Connect MyNearWallet on testnet.
-2. Creators register/update a profile.
-3. Fans send native NEAR through the contract.
-4. The contract stores the donation receipt on-chain.
-5. Creators withdraw their accumulated balance with `withdraw()`.
+- `/`: home page with creator directory, featured NFTs, wallet status
+- `/creator/[accountId]`: creator profile with NFTs, donation form, leaderboard, history
+- `/dashboard`: mint form, owned NFTs, minted NFTs, donation receipts, withdraw
 
 ## Environment
 
-Create `.env.local`:
-
-```bash
-NEXT_PUBLIC_NEAR_NETWORK_ID=testnet
-NEXT_PUBLIC_NEAR_CONTRACT_ID=toyota123.testnet
-NEXT_PUBLIC_NEAR_EXPLORER_BASE_URL=https://explorer.testnet.near.org
-```
-
-Or copy:
+Copy the example file:
 
 ```bash
 cp .env.example .env.local
 ```
 
+Required values:
+
+```bash
+NEXT_PUBLIC_NEAR_NETWORK_ID=testnet
+NEXT_PUBLIC_NEAR_CONTRACT_ID=konigsegg123.testnet
+NEXT_PUBLIC_NEAR_EXPLORER_BASE_URL=https://explorer.testnet.near.org
+NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt
+```
+
 ## Install
 
 ```bash
-npm install
+npm install --ignore-scripts
 ```
+
+Why `--ignore-scripts` on this Windows machine:
+- the `cargo-near` npm package tries to download a native binary during install
+- that download has been unreliable here
+- the frontend itself works without that install script
 
 ## Frontend Dev
 
@@ -90,174 +101,149 @@ npm install
 npm run dev
 ```
 
-## Contract Build
-
-Install the compatible NEAR contract toolchain once:
-
-```bash
-rustup toolchain install 1.86.0
-rustup target add wasm32-unknown-unknown --toolchain 1.86.0
-```
-
-Build:
-
-```bash
-npm run build:contract
-```
-
-Expected wasm output:
-
-```text
-near-contract/target/near/fandonation_near.wasm
-```
-
-## Local Validation
-
-Frontend build:
+## Frontend Validation
 
 ```bash
 npm run build
 ```
 
-Contract tests:
+Current status:
+- frontend production build passes
+
+## Contract Build
+
+Recommended environment:
+- Linux or WSL2 Ubuntu
+
+Why:
+- this Windows machine is missing the MSVC linker for normal Rust builds
+- the GNU Windows toolchain also has `dlltool` issues for some dependencies
+
+Recommended Linux / WSL commands:
 
 ```bash
-npm run test:contract
+rustup toolchain install 1.86.0
+rustup target add wasm32-unknown-unknown --toolchain 1.86.0
+npm install
+npm run build:contract
 ```
 
-Current validation status:
+Expected output:
 
-- frontend production build succeeds
-- contract unit tests succeed
-- contract build succeeds with `cargo-near` under Rust `1.86.0`
-- raw `cargo build --target wasm32-unknown-unknown` output is not reliable for deploy on current nearcore; use `npm run build:contract`
-
-## NEAR Testnet Account Setup
-
-You already have:
-
-- wallet account: `toyota123.testnet`
-- faucet funding received: `10 NEAR` on testnet
-
-If you need to recreate a testnet account:
-
-```bash
-near account create-account sponsor-by-faucet-service yourname.testnet autogenerate-new-keypair save-to-keychain network-config testnet create
-```
-
-Import/login with the browser wallet:
-
-```bash
-near account import-account using-web-wallet network-config testnet
-```
-
-Check account state:
-
-```bash
-near state toyota123.testnet --networkId testnet
-near account view-account-summary toyota123.testnet network-config testnet now
-near tokens toyota123.testnet view-near-balance network-config testnet now
+```text
+near-contract/target/near/fandonation_near.wasm
 ```
 
 ## Deploy To NEAR Testnet
 
-Assuming you deploy directly to `toyota123.testnet`:
+Deploy directly to `konigsegg123.testnet`:
 
 ```bash
-npm run build:contract
+near contract deploy konigsegg123.testnet use-file ./near-contract/target/near/fandonation_near.wasm with-init-call new json-args '{}' prepaid-gas 30Tgas attached-deposit 0NEAR network-config testnet sign-with-keychain send
 ```
 
-```bash
-near contract deploy toyota123.testnet use-file ./near-contract/target/near/fandonation_near.wasm with-init-call new json-args '{}' prepaid-gas 30Tgas attached-deposit 0NEAR network-config testnet sign-with-keychain send
-```
+Recommended production layout instead:
+- keep `konigsegg123.testnet` as the wallet
+- deploy the contract to a subaccount such as `fandonation.konigsegg123.testnet`
 
-Verify deployed methods/storage:
+## Example NEAR CLI Calls
 
-```bash
-near contract inspect toyota123.testnet network-config testnet
-near account view-account-summary toyota123.testnet network-config testnet now
-```
-
-Production note:
-
-- for a cleaner separation, deploy the contract to a subaccount such as `fandonation.toyota123.testnet`
-- keep `toyota123.testnet` as the signing wallet account
-
-## Function Call Examples
-
-Create or update the creator profile:
+Mint an NFT:
 
 ```bash
-near contract call-function as-transaction toyota123.testnet set_profile json-args '{"display_name":"Toyota Creator","bio":"Fan-powered builder on NEAR testnet","image_url":"https://example.com/avatar.png"}' prepaid-gas 30Tgas attached-deposit 0.05NEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction konigsegg123.testnet mint_nft json-args '{"title":"Genesis Drop","description":"Exclusive creator access","media":"ipfs://<image-cid>","reference":"ipfs://<metadata-cid>"}' prepaid-gas 50Tgas attached-deposit 0.1NEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
 ```
 
 Donate 1 NEAR to a creator:
 
 ```bash
-near contract call-function as-transaction toyota123.testnet donate json-args '{"creator_id":"toyota123.testnet","message":"Thanks for building this."}' prepaid-gas 30Tgas attached-deposit 1NEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction konigsegg123.testnet donate json-args '{"creator_id":"konigsegg123.testnet"}' prepaid-gas 30Tgas attached-deposit 1NEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
 ```
 
-View donations:
+View NFTs by creator:
 
 ```bash
-near contract call-function as-read-only toyota123.testnet get_donations json-args '{"creator_id":"toyota123.testnet"}' network-config testnet
+near contract call-function as-read-only konigsegg123.testnet get_nfts_by_creator json-args '{"creator_id":"konigsegg123.testnet","from_index":0,"limit":10}' network-config testnet
+```
+
+View NFTs by owner:
+
+```bash
+near contract call-function as-read-only konigsegg123.testnet get_nfts_by_owner json-args '{"owner_id":"konigsegg123.testnet","from_index":0,"limit":10}' network-config testnet
+```
+
+View creator donations:
+
+```bash
+near contract call-function as-read-only konigsegg123.testnet get_donations json-args '{"creator_id":"konigsegg123.testnet","from_index":0,"limit":10}' network-config testnet
 ```
 
 View total donations:
 
 ```bash
-near contract call-function as-read-only toyota123.testnet get_total_donations json-args '{"creator_id":"toyota123.testnet"}' network-config testnet
+near contract call-function as-read-only konigsegg123.testnet get_total_donations json-args '{"creator_id":"konigsegg123.testnet"}' network-config testnet
 ```
 
 Withdraw creator funds:
 
 ```bash
-near contract call-function as-transaction toyota123.testnet withdraw json-args {} prepaid-gas 30Tgas attached-deposit 1yoctoNEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction konigsegg123.testnet withdraw json-args '{}' prepaid-gas 30Tgas attached-deposit 1yoctoNEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
 ```
 
 ## Example Frontend Calls
 
-Donation:
+Mint:
+
+```ts
+const upload = await uploadNftToIPFS(file, title, description);
+
+await callFunction({
+  contractId: nearContractId,
+  method: "mint_nft",
+  args: {
+    title,
+    description,
+    media: upload.mediaUri,
+    reference: upload.metadataUri,
+  },
+  gas: nearGas,
+  deposit: nearToYocto("0.1"),
+});
+```
+
+Donate:
 
 ```ts
 await callFunction({
   contractId: nearContractId,
   method: "donate",
-  args: {
-    creator_id: "toyota123.testnet",
-    message: "Thanks for building this.",
-  },
+  args: { creator_id: "konigsegg123.testnet" },
   gas: nearGas,
   deposit: nearToYocto("1"),
 });
 ```
 
-View creators:
+View creator NFTs:
 
 ```ts
-const creators = await viewFunction({
+const nfts = await viewFunction({
   contractId: nearContractId,
-  method: "list_creators",
-  args: { from_index: 0, limit: 50 },
+  method: "get_nfts_by_creator",
+  args: { creator_id: "konigsegg123.testnet", from_index: 0, limit: 20 },
 });
 ```
 
-Withdraw:
+## Aptos To NEAR Differences
 
-```ts
-await callFunction({
-  contractId: nearContractId,
-  method: "withdraw",
-  args: {},
-  gas: nearGas,
-  deposit: "1",
-});
-```
+- Aptos `0x...` addresses become named NEAR accounts like `creator.testnet`
+- Move resources / tables are replaced by `LookupMap`, `Vector`, and NEP-171 collections
+- MetaMask-style extension flows are replaced by Wallet Selector + web wallet redirects
+- NEAR payments use attached deposits in yoctoNEAR
+- NFT media is usually stored off-chain on IPFS and referenced from on-chain metadata
 
-## Developer Notes
+## Notes
 
-- `donate` is payable and accepts native NEAR.
-- `withdraw` requires `1yoctoNEAR` as a standard NEAR security guard.
-- creator profiles are optional until the creator registers with `set_profile`.
-- donation history is on-chain, so each receipt increases contract storage.
-- the frontend polls contract views to refresh totals and recent donations.
+- Donation receipts increase on-chain storage over time
+- `withdraw()` requires `1 yoctoNEAR` as a security guard
+- the contract refunds unused mint storage deposit automatically
+- Pinata JWT is required for media and metadata upload

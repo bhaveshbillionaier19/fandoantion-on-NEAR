@@ -10,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 export const metadata: Metadata = {
-  title: "Fan Donation | Support Creators on NEAR Testnet",
+  title: "Fan Donation | NFT Minting and Support on NEAR Testnet",
 };
 
 export default function RootLayout({

@@ -8,27 +8,42 @@ import {
   nearNetworkId,
   nearNetworkLabel,
 } from "@/constants";
+import { normalizeIpfsUrl } from "@/lib/ipfs";
 
 export interface DonationView {
   donor_id: string;
   amount: string;
   timestamp_ms: number;
-  message?: string | null;
+}
+
+export interface NftView {
+  token_id: string;
+  owner_id: string;
+  creator_id: string;
+  title?: string | null;
+  description?: string | null;
+  media?: string | null;
+  reference?: string | null;
+  issued_at?: string | null;
 }
 
 export interface CreatorView {
   creator_id: string;
-  display_name: string;
-  bio?: string | null;
-  image_url?: string | null;
   total_donations: string;
   withdrawable_balance: string;
   donation_count: number;
-  recent_donations: DonationView[];
+  nft_count: number;
+  recent_nfts: NftView[];
 }
 
-export const nearGas = "30000000000000";
-export const profileStorageDeposit = "0.05";
+export interface DonorTotalView {
+  donor_id: string;
+  total_amount: string;
+  donation_count: number;
+}
+
+export const nearGas = "100000000000000";
+export const mintStorageDeposit = "0.1";
 
 export function yoctoToNear(amount: string | bigint, fractionDigits = 4) {
   const formatted = convertYoctoToNear(BigInt(amount.toString()), fractionDigits);
@@ -51,11 +66,32 @@ export function explorerAccountUrl(accountId: string) {
   return `${nearExplorerBaseUrl}/accounts/${accountId}`;
 }
 
+export function explorerTokenUrl(contractId: string, tokenId: string) {
+  return `${nearExplorerBaseUrl}/accounts/${contractId}`;
+}
+
 export function timestampLabel(timestampMs: number) {
   return new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(timestampMs);
+}
+
+export function issuedAtLabel(issuedAt?: string | null) {
+  if (!issuedAt) {
+    return "Unknown";
+  }
+
+  const numeric = Number(issuedAt);
+  if (Number.isNaN(numeric)) {
+    return issuedAt;
+  }
+
+  return timestampLabel(numeric);
+}
+
+export function nftMediaUrl(token: NftView) {
+  return normalizeIpfsUrl(token.media) || normalizeIpfsUrl(token.reference) || token.media || token.reference || null;
 }
 
 export { nearContractId, nearExplorerBaseUrl, nearNetworkId, nearNetworkLabel };

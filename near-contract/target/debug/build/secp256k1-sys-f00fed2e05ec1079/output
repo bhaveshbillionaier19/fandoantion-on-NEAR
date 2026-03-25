@@ -121,4 +121,4 @@ ARFLAGS_x86_64_unknown_linux_gnu = None
 cargo:rerun-if-env-changed=ARFLAGS_x86_64-unknown-linux-gnu
 ARFLAGS_x86_64-unknown-linux-gnu = None
 cargo:rustc-link-lib=static=secp256k1
-cargo:rustc-link-search=native=/home/bhavesh/Desktop/intern/fandonation on NEAR/fandoantion-on-NEAR/near-contract/target/debug/build/secp256k1-sys-f00fed2e05ec1079/out
+cargo:rustc-link-search=native=/workspace/near-contract/target/debug/build/secp256k1-sys-f00fed2e05ec1079/out

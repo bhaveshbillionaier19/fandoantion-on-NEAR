@@ -1,8 +1,8 @@
 cargo:rustc-cfg=feature="std"
 cargo:rerun-if-env-changed=BLST_TEST_NO_STD
-Using blst source directory /home/bhavesh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst
-cargo:rerun-if-changed=/home/bhavesh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/src
-cargo:rerun-if-changed=/home/bhavesh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/build
+Using blst source directory /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst
+cargo:rerun-if-changed=/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/src
+cargo:rerun-if-changed=/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/build
 cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
 CC_x86_64-unknown-linux-gnu = None
 cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
@@ -140,6 +140,6 @@ ARFLAGS_x86_64_unknown_linux_gnu = None
 cargo:rerun-if-env-changed=ARFLAGS_x86_64-unknown-linux-gnu
 ARFLAGS_x86_64-unknown-linux-gnu = None
 cargo:rustc-link-lib=static=blst
-cargo:rustc-link-search=native=/home/bhavesh/Desktop/intern/fandonation on NEAR/fandoantion-on-NEAR/near-contract/target/debug/build/blst-5607c8706c9c00dd/out
-cargo:BINDINGS=/home/bhavesh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/bindings
-cargo:C_SRC=/home/bhavesh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/src
+cargo:rustc-link-search=native=/workspace/near-contract/target/debug/build/blst-5607c8706c9c00dd/out
+cargo:BINDINGS=/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/bindings
+cargo:C_SRC=/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blst-0.3.16/blst/src

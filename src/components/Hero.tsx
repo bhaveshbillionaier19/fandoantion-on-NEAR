@@ -31,25 +31,24 @@ export default function Hero() {
           className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-1.5 mb-6 text-sm text-muted-foreground"
         >
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <span>Powered by NEAR Testnet</span>
+          <span>NEAR testnet NFT minting + fan donations</span>
         </motion.div>
 
         <motion.h1
           variants={itemVariants}
           className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6"
         >
-          Support Creators
+          Mint Collectibles.
           <br className="hidden sm:block" />
-          <span className="gradient-text-hero">Through Named Accounts</span>
+          <span className="gradient-text-hero">Receive Support On-Chain.</span>
         </motion.h1>
 
         <motion.p
           variants={itemVariants}
-          className="max-w-2xl mx-auto text-base md:text-lg text-muted-foreground mb-8 leading-relaxed"
+          className="max-w-3xl mx-auto text-base md:text-lg text-muted-foreground mb-8 leading-relaxed"
         >
-          Fans donate native NEAR directly to creator profiles. Every donation is recorded
-          on-chain, creators can withdraw later, and the app works with MyNearWallet instead of
-          extension-only wallet flows.
+          Creators mint NFTs with IPFS media, fans donate native NEAR on testnet, and the app
+          keeps both collections and support receipts visible through named NEAR accounts.
         </motion.p>
 
         <motion.div
@@ -64,10 +63,10 @@ export default function Hero() {
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
           <Link
-            href="/creator"
+            href="/dashboard"
             className="gradient-btn-outline text-foreground font-semibold px-8 py-3.5 rounded-full text-base hover:bg-white/5 transition-colors"
           >
-            Create profile
+            Open dashboard
           </Link>
         </motion.div>
       </motion.div>
