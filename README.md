@@ -4,7 +4,7 @@ This repo is now structured as a NEAR testnet migration of the fan donation app:
 
 - `near-contract/`: Rust smart contract using `near-sdk`
 - `src/`: Next.js frontend using MyNearWallet via Wallet Selector
-- Default contract account: `konigsegg123.testnet`
+- Default contract account: `toyota123.testnet`
 - Local CLI version used during migration: `near-cli-rs 0.24.0`
 
 ## What Changed From Aptos
@@ -67,13 +67,15 @@ Core flow:
 Create `.env.local`:
 
 ```bash
-NEXT_PUBLIC_NEAR_CONTRACT_ID=konigsegg123.testnet
+NEXT_PUBLIC_NEAR_NETWORK_ID=testnet
+NEXT_PUBLIC_NEAR_CONTRACT_ID=toyota123.testnet
+NEXT_PUBLIC_NEAR_EXPLORER_BASE_URL=https://explorer.testnet.near.org
 ```
 
 Or copy:
 
 ```bash
-Copy-Item .env.example .env.local
+cp .env.example .env.local
 ```
 
 ## Install
@@ -90,10 +92,11 @@ npm run dev
 
 ## Contract Build
 
-Install the wasm target once:
+Install the compatible NEAR contract toolchain once:
 
 ```bash
-rustup target add wasm32-unknown-unknown
+rustup toolchain install 1.86.0
+rustup target add wasm32-unknown-unknown --toolchain 1.86.0
 ```
 
 Build:
@@ -105,7 +108,7 @@ npm run build:contract
 Expected wasm output:
 
 ```text
-near-contract/target/wasm32-unknown-unknown/release/fandonation_near.wasm
+near-contract/target/near/fandonation_near.wasm
 ```
 
 ## Local Validation
@@ -122,22 +125,18 @@ Contract tests:
 npm run test:contract
 ```
 
-Note for this Windows machine:
+Current validation status:
 
 - frontend production build succeeds
-- Rust contract build/test is currently blocked by missing Microsoft C++ linker tooling (`link.exe`)
-- install **Visual Studio Build Tools** with the **Desktop development with C++** workload, then rerun:
-
-```bash
-npm run test:contract
-npm run build:contract
-```
+- contract unit tests succeed
+- contract build succeeds with `cargo-near` under Rust `1.86.0`
+- raw `cargo build --target wasm32-unknown-unknown` output is not reliable for deploy on current nearcore; use `npm run build:contract`
 
 ## NEAR Testnet Account Setup
 
 You already have:
 
-- wallet account: `konigsegg123.testnet`
+- wallet account: `toyota123.testnet`
 - faucet funding received: `10 NEAR` on testnet
 
 If you need to recreate a testnet account:
@@ -155,65 +154,65 @@ near account import-account using-web-wallet network-config testnet
 Check account state:
 
 ```bash
-near state konigsegg123.testnet --networkId testnet
-near account view-account-summary konigsegg123.testnet network-config testnet now
-near tokens konigsegg123.testnet view-near-balance network-config testnet now
+near state toyota123.testnet --networkId testnet
+near account view-account-summary toyota123.testnet network-config testnet now
+near tokens toyota123.testnet view-near-balance network-config testnet now
 ```
 
 ## Deploy To NEAR Testnet
 
-Assuming you deploy directly to `konigsegg123.testnet`:
+Assuming you deploy directly to `toyota123.testnet`:
 
 ```bash
 npm run build:contract
 ```
 
 ```bash
-near contract deploy konigsegg123.testnet use-file .\near-contract\target\wasm32-unknown-unknown\release\fandonation_near.wasm with-init-call new json-args '{}' prepaid-gas 30Tgas attached-deposit 0NEAR network-config testnet sign-with-keychain send
+near contract deploy toyota123.testnet use-file ./near-contract/target/near/fandonation_near.wasm with-init-call new json-args '{}' prepaid-gas 30Tgas attached-deposit 0NEAR network-config testnet sign-with-keychain send
 ```
 
 Verify deployed methods/storage:
 
 ```bash
-near contract inspect konigsegg123.testnet network-config testnet
-near account view-account-summary konigsegg123.testnet network-config testnet now
+near contract inspect toyota123.testnet network-config testnet
+near account view-account-summary toyota123.testnet network-config testnet now
 ```
 
 Production note:
 
-- for a cleaner separation, deploy the contract to a subaccount such as `fandonation.konigsegg123.testnet`
-- keep `konigsegg123.testnet` as the signing wallet account
+- for a cleaner separation, deploy the contract to a subaccount such as `fandonation.toyota123.testnet`
+- keep `toyota123.testnet` as the signing wallet account
 
 ## Function Call Examples
 
 Create or update the creator profile:
 
 ```bash
-near contract call-function as-transaction konigsegg123.testnet set_profile json-args '{"display_name":"Konigsegg Creator","bio":"Fan-powered builder on NEAR testnet","image_url":"https://example.com/avatar.png"}' prepaid-gas 30Tgas attached-deposit 0.05NEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction toyota123.testnet set_profile json-args '{"display_name":"Toyota Creator","bio":"Fan-powered builder on NEAR testnet","image_url":"https://example.com/avatar.png"}' prepaid-gas 30Tgas attached-deposit 0.05NEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
 ```
 
 Donate 1 NEAR to a creator:
 
 ```bash
-near contract call-function as-transaction konigsegg123.testnet donate json-args '{"creator_id":"konigsegg123.testnet","message":"Thanks for building this."}' prepaid-gas 30Tgas attached-deposit 1NEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction toyota123.testnet donate json-args '{"creator_id":"toyota123.testnet","message":"Thanks for building this."}' prepaid-gas 30Tgas attached-deposit 1NEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
 ```
 
 View donations:
 
 ```bash
-near contract call-function as-read-only konigsegg123.testnet get_donations json-args '{"creator_id":"konigsegg123.testnet"}' network-config testnet
+near contract call-function as-read-only toyota123.testnet get_donations json-args '{"creator_id":"toyota123.testnet"}' network-config testnet
 ```
 
 View total donations:
 
 ```bash
-near contract call-function as-read-only konigsegg123.testnet get_total_donations json-args '{"creator_id":"konigsegg123.testnet"}' network-config testnet
+near contract call-function as-read-only toyota123.testnet get_total_donations json-args '{"creator_id":"toyota123.testnet"}' network-config testnet
 ```
 
 Withdraw creator funds:
 
 ```bash
-near contract call-function as-transaction konigsegg123.testnet withdraw json-args {} prepaid-gas 30Tgas attached-deposit 1yoctoNEAR sign-as konigsegg123.testnet network-config testnet sign-with-keychain send
+near contract call-function as-transaction toyota123.testnet withdraw json-args {} prepaid-gas 30Tgas attached-deposit 1yoctoNEAR sign-as toyota123.testnet network-config testnet sign-with-keychain send
 ```
 
 ## Example Frontend Calls
@@ -225,7 +224,7 @@ await callFunction({
   contractId: nearContractId,
   method: "donate",
   args: {
-    creator_id: "konigsegg123.testnet",
+    creator_id: "toyota123.testnet",
     message: "Thanks for building this.",
   },
   gas: nearGas,

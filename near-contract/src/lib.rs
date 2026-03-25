@@ -4,7 +4,7 @@ use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near, require, AccountId, BorshStorageKey, Gas,
-    NearToken, PanicOnDefault, Promise, PromiseResult,
+    NearToken, PanicOnDefault, Promise,
 };
 
 const GAS_FOR_WITHDRAW_CALLBACK: Gas = Gas::from_tgas(10);
@@ -16,6 +16,7 @@ const DEFAULT_RECENT_DONATIONS_LIMIT: u64 = 3;
 const DEFAULT_LIST_LIMIT: u64 = 20;
 const MAX_LIST_LIMIT: u64 = 100;
 
+#[allow(dead_code)]
 #[ext_contract(ext_self)]
 trait WithdrawCallback {
     fn on_withdraw_complete(&mut self, creator_id: AccountId, amount: U128) -> bool;
@@ -265,15 +266,14 @@ impl FanDonationContract {
 
     #[private]
     pub fn on_withdraw_complete(&mut self, creator_id: AccountId, amount: U128) -> bool {
-        match env::promise_result(0) {
-            PromiseResult::Successful(_) => true,
-            _ => {
-                let mut creator = self.expect_creator(&creator_id);
-                creator.withdrawable_balance_yocto += amount.0;
-                self.creators.insert(&creator_id, &creator);
-                false
-            }
+        if env::promise_result_checked(0, 0).is_ok() {
+            return true;
         }
+
+        let mut creator = self.expect_creator(&creator_id);
+        creator.withdrawable_balance_yocto += amount.0;
+        self.creators.insert(&creator_id, &creator);
+        false
     }
 }
 
@@ -312,7 +312,9 @@ impl FanDonationContract {
 
         let refund = attached_deposit - storage_cost;
         if refund > 0 {
-            Promise::new(env::predecessor_account_id()).transfer(NearToken::from_yoctonear(refund));
+            Promise::new(env::predecessor_account_id())
+                .transfer(NearToken::from_yoctonear(refund))
+                .detach();
         }
     }
 
@@ -397,7 +399,8 @@ impl FanDonationContract {
 mod tests {
     use super::*;
     use near_sdk::test_utils::VMContextBuilder;
-    use near_sdk::testing_env;
+    use near_sdk::{testing_env, PromiseResult, RuntimeFeesConfig};
+    use std::collections::HashMap;
 
     fn account(value: &str) -> AccountId {
         value.parse().unwrap()
@@ -405,7 +408,7 @@ mod tests {
 
     fn context(predecessor: &str, deposit_near: u128) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
-        builder.current_account_id(account("konigsegg123.testnet"));
+        builder.current_account_id(account("toyota123.testnet"));
         builder.predecessor_account_id(account(predecessor));
         builder.signer_account_id(account(predecessor));
         builder.attached_deposit(NearToken::from_near(deposit_near));
@@ -456,10 +459,22 @@ mod tests {
         let donation = contract.donate(account("creator.testnet"), None);
 
         builder = context("creator.testnet", 0);
+        builder.attached_deposit(NearToken::from_yoctonear(1));
         testing_env!(builder.build());
         let before = contract.get_withdrawable_balance(account("creator.testnet")).0;
         assert_eq!(before, donation.amount.0);
 
+        let _ = contract.withdraw();
+        assert_eq!(contract.get_withdrawable_balance(account("creator.testnet")).0, 0);
+
+        builder.attached_deposit(NearToken::from_yoctonear(0));
+        testing_env!(
+            builder.build(),
+            near_sdk::test_vm_config(),
+            RuntimeFeesConfig::test(),
+            HashMap::default(),
+            vec![PromiseResult::Failed],
+        );
         contract.on_withdraw_complete(account("creator.testnet"), U128(donation.amount.0));
         let restored = contract.get_withdrawable_balance(account("creator.testnet")).0;
 

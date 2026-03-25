@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:contract": "cargo build --manifest-path near-contract/Cargo.toml --target wasm32-unknown-unknown --release",
+    "build:contract": "npx cargo-near near build non-reproducible-wasm --no-abi --manifest-path near-contract/Cargo.toml --out-dir near-contract/target/near --override-toolchain 1.86.0",
     "test:contract": "cargo test --manifest-path near-contract/Cargo.toml"
   },
   "dependencies": {
@@ -41,6 +41,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",
+    "cargo-near": "^0.20.0",
     "dotenv": "^17.2.3",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",

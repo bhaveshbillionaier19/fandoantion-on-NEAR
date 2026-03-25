@@ -1,1 +1,1 @@
-C:\Users\HP\Desktop\intern\fandonation\ on\ NEAR\fandonation-on-aptos\near-contract\target\wasm32-unknown-unknown\release\fandonation_near.wasm: C:\Users\HP\Desktop\intern\fandonation\ on\ NEAR\fandonation-on-aptos\near-contract\src\lib.rs
+/home/bhavesh/Desktop/intern/fandonation\ on\ NEAR/fandoantion-on-NEAR/near-contract/target/wasm32-unknown-unknown/release/fandonation_near.wasm: /home/bhavesh/Desktop/intern/fandonation\ on\ NEAR/fandoantion-on-NEAR/near-contract/src/lib.rs

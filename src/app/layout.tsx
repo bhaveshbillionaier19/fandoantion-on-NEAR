@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { Providers } from "./providers";
@@ -9,8 +8,6 @@ import { ThemeProvider } from "@/app/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
 import AnimatedBackground from "@/components/AnimatedBackground";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Fan Donation | Support Creators on NEAR Testnet",
@@ -23,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
